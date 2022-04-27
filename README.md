@@ -1,5 +1,5 @@
 # RTC Transverter ArcGIS Plugin
-Author: Viraj Patel
+Author: Viraj Patel and Milan Patel
 Date: 3/25/2022
 
 ## What is it?
@@ -14,3 +14,16 @@ Of course! I have made the files public so that anyone can alter the code and us
 
 ## Further questions or assitance
 Go over the manual for specific details on how to start.
+
+## Vision Statement
+For GIS students/analysts
+who are looking to visualize spatial features that share similar attributes,
+the RTC Transverter
+is an exploratory tool
+that will highlight the spatial features based on the selected field, value, and range.
+Unlike current exploratory tools in ArcGIS,
+our product is intuitive and simple while also providing all the related information about the highlighted
+feature(s).
+
+## Background Story
+RTC Transverter was created as a college existing project by my partner Milan and I. Although after releasing the first version and getting great feedback and response, we decided to make this public and as of right now, many OSU students are using this plugin for their labs.
