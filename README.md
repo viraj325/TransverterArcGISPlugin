@@ -25,7 +25,7 @@ feature(s).
 RTC Transverter was created as a college existing project by my partner Milan and I. Although after releasing the first version and getting great feedback and response, we decided to make this public and as of right now, many OSU students are using this plugin for their labs.
 
 ## Contribute or Customize?
-Of course! I have made the files public so that anyone can alter the code and use it for their purpose under MIT open source license. The altered code can also be used for commercial purposes.
+Of course! I have made the files public so that anyone can alter the code and use it for their purpose under Apache 2.0 open source license. The altered code can also be used for commercial purposes.
 
 ## Further questions or assitance
 Go over the manual for specific details on how to start.
