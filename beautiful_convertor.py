@@ -40,20 +40,25 @@ value_with_buffer_min = 0
 feature_class_describe = arcpy.Describe(features_class_path)
 features_name = feature_class_describe.name.split(".shp", maxsplit=1)[0]
 order_of_fields_list = [x.strip() for x in order_of_fields.split(";")]
-arcpy.AddMessage(order_of_fields_list)
 
 if value.startswith("\"") and value.endswith("\""):
     new_value = re.findall(r'"([^"]*)"', value)[0]
     value_type = "String"
-    arcpy.AddMessage("Reformat Value: {}".format(new_value))
 elif "-" in value:
     split_value_list = value.split('-')
-    new_value = split_value_list[0]
-    value_range = split_value_list[1]
-    arcpy.AddMessage("Int: {} and extra {}".format(new_value, value_range))
+    if '.' in split_value_list[0]:
+        new_value = str(int(float(split_value_list[0])))
+    else:
+        new_value = str(int(split_value_list[0]))
+    arcpy.AddMessage("Int Value is: {}".format(new_value))
+
+    if '.' in split_value_list[0]:
+        value_range = str(int(float(split_value_list[1])))
+    else:
+        value_range = str(int(split_value_list[1]))
+    arcpy.AddMessage("Range Value is: {}".format(value_range))
     if check_int(new_value) and check_int(value_range):
         value_type = "Int"
-        arcpy.AddMessage("After check_int is applied Int: {} and extra {}".format(new_value, value_range))
     else:
         arcpy.addError("Value's format is incorrect, please check and retry.")
 else:
@@ -90,6 +95,7 @@ def reorder_fields(input, output, order_of_fields, missing = True):
     return output
 
 def select_highlight_and_create(q):
+    arcpy.AddMessage("Query is {}.".format(q))
     try:
         arcpy.SelectLayerByAttribute_management(features_name, 'NEW_SELECTION', q)
         arcpy.CopyFeatures_management(features_name, output)
@@ -98,28 +104,31 @@ def select_highlight_and_create(q):
 
 if value_type == "Int":
     query = """{} <= "{}" AND "{}" <= {}""".format(value_with_buffer_min, field, field, value_with_buffer_max)
-    arcpy.AddMessage(query)
     select_highlight_and_create(query)
 elif value_type == "String":
     query = """"{}" LIKE '%{}%'""".format(field, new_value)
-    arcpy.AddMessage(query)
     select_highlight_and_create(query)
 
-reorder_fields(features_name, output, order_of_fields_list)
+if order_of_fields_list:
+    arcpy.AddMessage("List of fields in order: {}.".format(order_of_fields_list))
+    reorder_fields(features_name, output, order_of_fields_list)
+else:
+    arcpy.AddMessage("There wasn't anything in order of fields.")
 
 output_field_names = [f.name for f in arcpy.ListFields(output)]
 
+aprx = arcpy.mp.ArcGISProject("CURRENT")
+m = aprx.listMaps()[0]
+# m.addDataFromPath(output)
+
 # ----------------------------------------------------------------------------------------------------------------------
 if should_export_layout:
-    aprx = arcpy.mp.ArcGISProject("CURRENT")
-    m = aprx.listMaps()[0]
-    m.addDataFromPath(output)
     lyr = m.listLayers()[0]
-    output_class_describe = arcpy.Describe(output)
+    '''output_class_describe = arcpy.Describe(output)
     output_name = output_class_describe.name.split(".shp", maxsplit=1)[0]
     for tempLayer in m.listLayers():
         if tempLayer.name != output_name:
-            tempLayer.visibility = False
+            tempLayer.visibility = False'''
 
     lyt = aprx.listLayouts()[0]
     titleText = lyt.listElements("TEXT_ELEMENT", "Text")[0]
@@ -127,45 +136,50 @@ if should_export_layout:
     northArrow = lyt.listElements(wildcard="North Arrow")[0]
     legend = lyt.listElements(wildcard="Legend")[0]
 
-    titleText.text = layout_title
+    titleText.text = "<FNT size='25'><BOL>{}</BOL></FNT>".format(layout_title)
 
     otherInfoText = titleText.clone("_clone")
     date = datetime.datetime.now()
     current_date = "{}-{}-{}".format(date.month, date.day, date.year)
-    otherInfoText.text = "Name: {}, Date: {}, Sources: {}".format(layout_name, current_date, layout_sources)
+    otherInfoText.text = "<FNT size='16'>Name: {}, Date: {}, Sources: {}</FNT>".format(layout_name, current_date, layout_sources)
 
     legendText = titleText.clone("_clone")
     legendText.text = "Legend"
 
     mf = lyt.listElements("mapframe_element", "Map Frame")[0]
     mf.camera.setExtent(mf.getLayerExtent(lyr, False, True))
-    mf.elementWidth = 7.0
-    mf.elementHeight = 4.0
-    mf.elementPositionY = 5.0
-    mf.elementPositionX = 1.0
+    mf.elementWidth = 7.5
+    mf.elementHeight = 6.0
+    mf.elementPositionY = 4.0
+    mf.elementPositionX = 0.5
 
     scaleBar.elementPositionY = 3.5
     scaleBar.elementPositionX = 1.0
+    scaleBar.elementWidth = 3.5
+    scaleBar.elementHeight = 1.0
 
     northArrow.elementPositionY = 2.5
     northArrow.elementPositionX = 1.0
+    northArrow.elementWidth = 1.0
+    northArrow.elementHeight = 1.0
 
-    legendText.elementPositionY = 4.0
+    legendText.elementPositionY = 3.5
     legendText.elementPositionX = 5.0
-    legend.elementPositionY = 3.5
+    legend.elementPositionY = 3.0
     legend.elementPositionX = 5.0
 
-    titleText.elementPositionY = 10.0
+    titleText.elementPositionY = 10.5
     titleText.elementPositionX = 1.0
+    titleText.elementWidth = 7.0
 
     otherInfoText.elementPositionY = 1.5
     otherInfoText.elementPositionX = 1.0
     otherInfoText.elementWidth = 7.0
 
-    lyt.exportToPDF(r"C:\Temp\beautiful_convertor_pdf.pdf")
-    arcpy.AddMessage("PDF Generated at C:/Temp/beautiful_convertor_pdf.pdf")
+    lyt.exportToPDF(r"C:\Temp\transverter.pdf")
+    arcpy.AddMessage("PDF Generated at C:/Temp/transverter.pdf")
 
     for elm in lyt.listElements(wildcard="_clone"):
         elm.delete()
-        
+
     del aprx
